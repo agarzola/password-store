@@ -15,6 +15,7 @@ which gpg2 &>/dev/null && GPG="gpg2"
 PREFIX="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
 EXTENSIONS="${PASSWORD_STORE_EXTENSIONS_DIR:-$PREFIX/.extensions}"
 X_SELECTION="${PASSWORD_STORE_X_SELECTION:-clipboard}"
+CLIP_DEFAULT="${PASSWORD_STORE_CLIP_DEFAULT:0}"
 CLIP_TIME="${PASSWORD_STORE_CLIP_TIME:-45}"
 GENERATED_LENGTH="${PASSWORD_STORE_GENERATED_LENGTH:-25}"
 CHARACTER_SET="${PASSWORD_STORE_CHARACTER_SET:-[:graph:]}"
@@ -357,6 +358,12 @@ cmd_show() {
 		--) shift; break ;;
 	esac done
 
+	# Copy to clipboard if PASSWORD_STORE_CLIP_DEFAULT is set
+	if [[ -n $CLIP_DEFAULT && $clip -ne 1 ]]; then
+		clip=1
+		selected_line="1"
+	fi
+
 	[[ $err -ne 0 || ( $qrcode -eq 1 && $clip -eq 1 ) ]] && die "Usage: $PROGRAM $COMMAND [--clip[=line-number],-c[line-number]] [--qrcode[=line-number],-q[line-number]] [pass-name]"
 
 	local pass
@@ -491,7 +498,7 @@ cmd_edit() {
 }
 
 cmd_generate() {
-	local opts qrcode=0 clip=0 force=0 characters="$CHARACTER_SET" inplace=0 pass
+	local opts qrcode=0 clip="$CLIP_DEFAULT" force=0 characters="$CHARACTER_SET" inplace=0 pass
 	opts="$($GETOPT -o nqcif -l no-symbols,qrcode,clip,in-place,force -n "$PROGRAM" -- "$@")"
 	local err=$?
 	eval set -- "$opts"
